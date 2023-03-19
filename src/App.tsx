@@ -1,9 +1,10 @@
-import Button from './components/Button/Button'
+import { Children, useState } from 'react'
+import Form from './components/Form'
 
 function App() {
   return (
     <div>
-      <Button onClick={() => {}}>My Button</Button>
+      <Form />
     </div>
   )
 }
