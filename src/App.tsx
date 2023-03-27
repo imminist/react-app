@@ -5,11 +5,14 @@ import Expense from './expense-tracer/components/Expense'
 import ExpenseFilter from './expense-tracer/components/ExpenseFilter'
 import ExpenseList from './expense-tracer/ExpenseList'
 import axios from 'axios'
+import ExpenseForm from './expense-tracer/components/ExpenseForm'
+import categories from './expense-tracer/categories'
 
 interface User {
   id: number
   name: string
 }
+
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -74,6 +77,10 @@ function App() {
             <li key={user.id}>{user.name}</li>
           ))}
         </ul>
+      </div>
+
+      <div className="mb-5">
+        <ExpenseForm />
       </div>
       <div className="mb-3">
         <select
