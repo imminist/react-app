@@ -4,7 +4,7 @@ import ProductList from './components/ProductList'
 import Expense from './expense-tracer/components/Expense'
 import ExpenseFilter from './expense-tracer/components/ExpenseFilter'
 import ExpenseList from './expense-tracer/ExpenseList'
-import axios from 'axios'
+import axios, { CanceledError } from 'axios'
 import ExpenseForm from './expense-tracer/components/ExpenseForm'
 import categories from './expense-tracer/categories'
 
@@ -13,19 +13,29 @@ interface User {
   name: string
 }
 
-
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const ref = useRef<HTMLInputElement>(null)
   const [category, setCategory] = useState('')
   const [users, setUsers] = useState<User[]>([])
   const [error, setError] = useState('')
+  const [isLoading, setLoading] = useState(false)
 
   useEffect(() => {
+    const controller = new AbortController()
+    setLoading(true)
     axios
-      .get<User[]>('https://jsonplaceholder.typicode.com/usersx')
-      .then((res) => setUsers(res.data))
-      .catch((err) => setError(err.message))
+      .get<User[]>('https://jsonplaceholder.typicode.com/users')
+      .then((res) => {
+        setUsers(res.data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        if (err instanceof CanceledError) return
+        setError(err.message)
+        setLoading(false)
+      })
+    return () => controller.abort()
   }, [])
 
   // afterRender
@@ -71,6 +81,7 @@ function App() {
   return (
     <div>
       <p className="text-danger">{error}</p>
+      {isLoading && <div className="spinner-border"></div>}
       <div className="mb-3">
         <ul>
           {users.map((user) => (
