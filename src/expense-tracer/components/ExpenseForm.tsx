@@ -1,26 +1,43 @@
-import React from 'react'
 import categories from '../categories'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const schema = z.object({
-  description: z.string().min(3).max(50),
-  amount: z.number().min(0.01).max(100_000),
-  category: z.enum(categories),
+  description: z
+    .string()
+    .min(3, { message: 'Description should be at least 3 characters.' })
+    .max(50),
+  amount: z
+    .number({ invalid_type_error: 'Amount is required' })
+    .min(0.01)
+    .max(100_000),
+  category: z.enum(categories, {
+    errorMap: () => ({ message: 'Category is required.' }),
+  }),
 })
 
 type ExpenseFormData = z.infer<typeof schema>
 
-const ExpenseForm = () => {
+interface Props {
+  onSubmit: (data: ExpenseFormData) => void
+}
+
+const ExpenseForm = ({ onSubmit }: Props) => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ExpenseFormData>({ resolver: zodResolver(schema) })
 
   return (
-    <form>
+    <form
+      onSubmit={handleSubmit((data) => {
+        onSubmit(data)
+        reset()
+      })}
+    >
       <div className="mb-3">
         <label htmlFor="" className="form-label">
           Description
@@ -40,7 +57,7 @@ const ExpenseForm = () => {
           Amount
         </label>
         <input
-          {...register('amount')}
+          {...register('amount', { valueAsNumber: true })}
           id="amount"
           type="number"
           className="form-control"
@@ -50,11 +67,11 @@ const ExpenseForm = () => {
         )}
       </div>
       <div className="mb-3">
-        <label htmlFor="" className="form-label">
+        <label htmlFor="category" className="form-label">
           Category
         </label>
-        <select {...register('category')} name="" id="" className="form-select">
-          <option value=""></option>
+        <select {...register('category')} id="category" className="form-select">
+          <option value="">All</option>
           {categories.map((category) => (
             <option key={category} value={category}>
               {category}

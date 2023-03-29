@@ -1,4 +1,4 @@
-import { Children, useState, useEffect, useRef } from 'react'
+import { Children, useState, useEffect } from 'react'
 import Form from './components/Form'
 import ProductList from './components/ProductList'
 import Expense from './expense-tracer/components/Expense'
@@ -15,7 +15,6 @@ interface User {
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('')
-  const ref = useRef<HTMLInputElement>(null)
   const [category, setCategory] = useState('')
   const [users, setUsers] = useState<User[]>([])
   const [error, setError] = useState('')
@@ -37,16 +36,6 @@ function App() {
       })
     return () => controller.abort()
   }, [])
-
-  // afterRender
-  useEffect(() => {
-    if (ref.current) ref.current.focus()
-  })
-  // Side effect
-
-  useEffect(() => {
-    document.title = 'My App Hello'
-  })
 
   const [expenses, setExpenses] = useState([
     {
@@ -79,8 +68,8 @@ function App() {
     : expenses
 
   const deleteUser = (user: User) => {
-    setUsers(users.filter((u) => u.id !== user.id))
     const originalUsers = [...users]
+    setUsers(users.filter((u) => u.id !== user.id))
 
     axios
       .delete('https://jsonplaceholder.typicode.com/users' + user.id)
@@ -89,11 +78,26 @@ function App() {
         setUsers(originalUsers)
       })
   }
+  const addUser = () => {
+    const originalUsers = [...users]
+    const newUser = { id: 0, name: 'Hiro' }
+    setUsers([newUser, ...users])
+    axios
+      .post('https://jsonplaceholder.typicode.com/xusers', newUser)
+      .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
+      .catch((err) => {
+        setError(err.message)
+        setUsers(originalUsers)
+      })
+  }
 
   return (
-    <div>
-      <p className="text-danger">{error}</p>
+    <>
+      {error && <p className="text-danger">{error}</p>}
       {isLoading && <div className="spinner-border"></div>}
+      <button className="btn btn-primary mb-3" onClick={addUser}>
+        Add User
+      </button>
       <div className="mb-3">
         <ul className="list-group">
           {users.map((user) => (
@@ -114,24 +118,11 @@ function App() {
       </div>
 
       <div className="mb-5">
-        <ExpenseForm />
-      </div>
-      <div className="mb-3">
-        <select
-          name=""
-          id=""
-          className="form-select"
-          onChange={(event) => setCategory(event.target.value)}
-        >
-          <option value=""></option>
-          <option value="Clothing">Clothing</option>
-          <option value="Household">Household</option>
-        </select>
-        <ProductList category={category} />
-      </div>
-
-      <div className="mb-3">
-        <input ref={ref} type="text" className="form-control" />
+        <ExpenseForm
+          onSubmit={(expense) =>
+            setExpenses([...expenses, { ...expense, id: expenses.length + 1 }])
+          }
+        />
       </div>
 
       <div className="mb-3">
@@ -143,7 +134,7 @@ function App() {
         expenses={visibleExpenses}
         onDelete={(id) => setExpenses(expenses.filter((e) => e.id !== id))}
       />
-    </div>
+    </>
   )
 }
 
